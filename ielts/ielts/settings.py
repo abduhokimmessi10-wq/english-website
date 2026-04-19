@@ -89,7 +89,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-GROQ_API_KEY = os.getenv('GROQ_API_KEY', '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')
+GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
 GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 CORS_ALLOWED_ORIGINS = [
