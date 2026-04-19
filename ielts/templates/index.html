@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}SpeakAI — IELTS Speaking Practice{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block extra_style %}
+.hero{text-align:center;padding:80px 24px 60px;max-width:760px;margin:0 auto}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:var(--violet-bg);border:1px solid var(--violet-soft);border-radius:20px;padding:6px 16px;font-size:12px;color:var(--violet2);font-weight:500;margin-bottom:28px}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--violet);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+.hero-title{font-size:clamp(36px,6vw,64px);font-weight:600;color:var(--text1);letter-spacing:-2px;line-height:1.1;margin-bottom:20px}
+.hero-title span{color:var(--violet2)}
+.hero-sub{font-size:17px;color:var(--text2);line-height:1.7;margin-bottom:40px;max-width:520px;margin-left:auto;margin-right:auto}
+.hero-btns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:560px;margin:60px auto 0}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;text-align:center}
+.stat-num{font-size:32px;font-weight:300;font-family:'Inter',sans-serif;letter-spacing:-1px;color:var(--text1)}
+.stat-label{font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+
+.parts-section{max-width:960px;margin:80px auto;padding:0 24px}
+.section-title{font-size:22px;font-weight:600;color:var(--text1);margin-bottom:8px;letter-spacing:-0.5px}
+.section-sub{font-size:14px;color:var(--text2);margin-bottom:32px}
+.parts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.part-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.part-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--part-color,var(--violet));opacity:0.6;transition:opacity 0.2s}
+.part-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.part-card:hover::before{opacity:1}
+.part-card-num{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
+.part-card-title{font-size:20px;font-weight:600;color:var(--text1);margin-bottom:8px;letter-spacing:-0.3px}
+.part-card-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px}
+.part-card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+.how-section{max-width:960px;margin:0 auto 80px;padding:0 24px}
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.how-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:24px}
+.how-num{width:32px;height:32px;border-radius:8px;background:var(--violet-bg);border:1px solid var(--violet-soft);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--violet2);margin-bottom:14px}
+.how-title{font-size:14px;font-weight:600;color:var(--text1);margin-bottom:6px}
+.how-desc{font-size:13px;color:var(--text2);line-height:1.6}
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div class="hero-badge">
+    <div class="hero-badge-dot"></div>
+    AI-powered IELTS preparation
+  </div>
+  <h1 class="hero-title">Master IELTS <span>Speaking</span><br>with AI Feedback</h1>
+  <p class="hero-sub">Practice all three parts of the IELTS speaking test. Get instant AI feedback on fluency, vocabulary, grammar, and pronunciation.</p>
+  <div class="hero-btns">
+    <a href="/practice/1/" class="btn btn-primary btn-lg">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 5-10 5V3z" fill="white"/></svg>
+      Start Practice
+    </a>
+    <a href="/practice/2/" class="btn btn-ghost btn-lg">View All Parts</a>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num">60</div>
+      <div class="stat-label">Total Questions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-sessions">{{ total_sessions }}</div>
+      <div class="stat-label">Your Sessions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">{% if best_score %}{{ best_score }}{% else %}—{% endif %}</div>
+      <div class="stat-label">Best Band Score</div>
+    </div>
+  </div>
+</div>
+
+<div class="parts-section">
+  <h2 class="section-title">Choose Your Practice Part</h2>
+  <p class="section-sub">Each part has 20 questions. Answer by typing or using your microphone.</p>
+  <div class="parts-grid">
+
+    <a href="/practice/1/" class="part-card" style="--part-color:#7c6ef5">
+      <div class="part-card-num">Part 1</div>
+      <div class="part-card-title">Introduction & Interview</div>
+      <div class="part-card-desc">Short, conversational questions about yourself — home, work, hobbies, daily life. 4–5 minute format.</div>
+      <div class="part-card-meta">
+        <span class="badge badge-violet">20 Questions</span>
+        <span class="badge badge-violet">4–5 min</span>
+        <span class="badge badge-violet">Conversational</span>
+      </div>
+    </a>
+
+    <a href="/practice/2/" class="part-card" style="--part-color:#34d399">
+      <div class="part-card-num">Part 2</div>
+      <div class="part-card-title">Individual Long Turn</div>
+      <div class="part-card-desc">Speak for 1–2 minutes on a given topic (cue card). Covers people, places, events, objects, and more.</div>
+      <div class="part-card-meta">
+        <span class="badge badge-green">20 Cue Cards</span>
+        <span class="badge badge-green">3–4 min</span>
+        <span class="badge badge-green">Monologue</span>
+      </div>
+    </a>
+
+    <a href="/practice/3/" class="part-card" style="--part-color:#60a5fa">
+      <div class="part-card-num">Part 3</div>
+      <div class="part-card-title">Two-Way Discussion</div>
+      <div class="part-card-desc">Abstract, analytical discussion questions linked to Part 2 topics. Express and justify your opinions.</div>
+      <div class="part-card-meta">
+        <span class="badge badge-blue">20 Questions</span>
+        <span class="badge badge-blue">4–5 min</span>
+        <span class="badge badge-blue">Analytical</span>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<div class="how-section">
+  <h2 class="section-title">How It Works</h2>
+  <p class="section-sub">Four simple steps to improve your IELTS speaking score.</p>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-num">1</div>
+      <div class="how-title">Choose a Part</div>
+      <div class="how-desc">Select Part 1, 2, or 3 depending on which area you want to practice today.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">2</div>
+      <div class="how-title">Read the Question</div>
+      <div class="how-desc">Read the question carefully. For Part 2, review all the cue card bullet points.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">3</div>
+      <div class="how-title">Speak or Type</div>
+      <div class="how-desc">Record your voice using the microphone or type your answer in the text box below.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">4</div>
+      <div class="how-title">Get AI Feedback</div>
+      <div class="how-desc">Receive instant band scores, strengths, improvements, and a model Band 9 answer.</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

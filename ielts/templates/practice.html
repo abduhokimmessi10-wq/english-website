@@ -1,0 +1,471 @@
+{% extends 'base.html' %}
+{% block title %}Part {{ part }} Practice — SpeakAI{% endblock %}
+{% block nav_p1 %}{% if part == 1 %}active{% endif %}{% endblock %}
+{% block nav_p2 %}{% if part == 2 %}active{% endif %}{% endblock %}
+{% block nav_p3 %}{% if part == 3 %}active{% endif %}{% endblock %}
+
+{% block extra_style %}
+.practice-wrap{max-width:860px;margin:0 auto;padding:40px 24px 80px}
+.practice-header{margin-bottom:36px}
+.practice-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:gap}
+.part-title{font-size:28px;font-weight:600;letter-spacing:-0.8px;color:var(--text1)}
+.progress-info{display:flex;align-items:center;gap:12px}
+.q-counter{font-size:13px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:6px 14px}
+.progress-bar-wrap{background:var(--surface2);border-radius:4px;height:4px;overflow:hidden;margin-top:12px}
+.progress-bar{height:100%;background:var(--violet);border-radius:4px;transition:width 0.4s ease}
+
+.question-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:32px;margin-bottom:20px;position:relative;overflow:hidden}
+.question-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--part-accent)}
+.q-meta{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.q-num{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.q-topic{font-size:12px;color:var(--part-accent-text);background:var(--part-accent-bg);border:1px solid var(--part-accent-border);padding:4px 12px;border-radius:20px;font-weight:500}
+.q-text{font-size:20px;font-weight:500;color:var(--text1);line-height:1.55;letter-spacing:-0.3px}
+.q-tip{margin-top:16px;font-size:13px;color:var(--text3);font-style:italic;border-left:2px solid var(--border2);padding-left:12px}
+
+.answer-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:20px}
+.answer-tabs{display:flex;gap:6px;background:var(--surface2);border-radius:var(--r2);padding:4px;margin-bottom:22px;width:fit-content}
+.answer-tab{padding:8px 18px;border-radius:8px;border:none;background:transparent;color:var(--text3);font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:7px}
+.answer-tab.active{background:var(--surface);color:var(--text1);border:1px solid var(--border)}
+.answer-tab:hover:not(.active){color:var(--text2)}
+
+.voice-area{display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px 0}
+.record-btn{width:80px;height:80px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-family:'DM Sans',sans-serif;flex-shrink:0}
+.record-btn.idle{background:var(--violet-bg);border:2px solid var(--violet-soft)}
+.record-btn.idle:hover{background:var(--violet-soft);border-color:var(--violet)}
+.record-btn.recording{background:var(--red-bg);border:2px solid rgba(248,113,113,0.4);animation:recPulse 1.5s ease infinite}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,0.3)}50%{box-shadow:0 0 0 12px rgba(248,113,113,0)}}
+.record-status{font-size:13px;color:var(--text2);text-align:center}
+.transcript-box{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;font-size:14px;color:var(--text1);min-height:60px;line-height:1.6}
+.transcript-placeholder{color:var(--text3);font-style:italic}
+
+.text-area{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;font-size:15px;color:var(--text1);font-family:'DM Sans',sans-serif;line-height:1.7;resize:vertical;min-height:140px;outline:none;transition:border-color 0.15s}
+.text-area::placeholder{color:var(--text3)}
+.text-area:focus{border-color:var(--violet);background:var(--surface3)}
+.char-count{font-size:12px;color:var(--text3);text-align:right;margin-top:6px}
+
+.submit-row{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.submit-row-left{display:flex;gap:10px}
+
+.feedback-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:32px;margin-bottom:20px;display:none;animation:fadeIn 0.3s ease}
+.feedback-card.show{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.scores-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:28px}
+@media(min-width:560px){.scores-grid{grid-template-columns:repeat(4,1fr)}}
+.score-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;text-align:center}
+.score-num{font-size:30px;font-weight:300;font-family:'Inter',sans-serif;letter-spacing:-1px;line-height:1;margin-bottom:4px}
+.score-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+
+.overall-score{display:flex;align-items:center;gap:20px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:20px 24px;margin-bottom:24px}
+.overall-num{font-size:56px;font-weight:200;font-family:'Inter',sans-serif;letter-spacing:-3px;line-height:1}
+.overall-info{flex:1}
+.overall-band{font-size:18px;font-weight:600;color:var(--text1);margin-bottom:4px}
+.overall-sub{font-size:13px;color:var(--text2)}
+
+.feedback-section{margin-bottom:20px}
+.feedback-section-title{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.feedback-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.feedback-text{font-size:14px;color:var(--text2);line-height:1.7;background:var(--surface2);border-radius:var(--r2);padding:14px 16px;border-left:3px solid var(--violet)}
+.feedback-text.green{border-color:var(--green)}
+.feedback-text.amber{border-color:var(--amber)}
+.model-answer{font-size:14px;color:var(--text1);line-height:1.75;background:var(--violet-bg);border:1px solid var(--violet-soft);border-radius:var(--r2);padding:18px 20px;font-style:italic}
+
+.nav-btns{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(8,8,16,0.8);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.loading-overlay.show{opacity:1;pointer-events:all}
+.loading-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:40px 48px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px}
+.loading-box .spinner{width:36px;height:36px;border-width:3px}
+.loading-box p{font-size:15px;color:var(--text2)}
+{% endblock %}
+
+{% block content %}
+{% with part_colors="1:#7c6ef5,2:#34d399,3:#60a5fa" %}
+<style>
+:root{
+  --part-accent:{% if part == 1 %}#7c6ef5{% elif part == 2 %}#34d399{% else %}#60a5fa{% endif %};
+  --part-accent-text:{% if part == 1 %}var(--violet2){% elif part == 2 %}var(--green){% else %}var(--blue){% endif %};
+  --part-accent-bg:{% if part == 1 %}var(--violet-bg){% elif part == 2 %}var(--green-bg){% else %}var(--blue-bg){% endif %};
+  --part-accent-border:{% if part == 1 %}var(--violet-soft){% elif part == 2 %}var(--green-border){% else %}var(--blue-border){% endif %};
+}
+</style>
+{% endwith %}
+
+<div class="practice-wrap">
+
+  <div class="practice-header">
+    <div class="practice-header-top">
+      <h1 class="part-title">Part {{ part }} — {% if part == 1 %}Introduction & Interview{% elif part == 2 %}Individual Long Turn{% else %}Two-Way Discussion{% endif %}</h1>
+      <div class="progress-info">
+        <div class="q-counter"><span id="q-current">1</span> / {{ questions_count }}</div>
+      </div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:{% widthratio 1 questions_count 100 %}%"></div>
+    </div>
+  </div>
+
+  <!-- question card -->
+  <div class="question-card" id="question-card">
+    <div class="q-meta">
+      <span class="q-num" id="q-num-label">Question 1</span>
+      <span class="q-topic" id="q-topic"></span>
+    </div>
+    <div class="q-text" id="q-text">Loading question...</div>
+    <div class="q-tip" id="q-tip"></div>
+  </div>
+
+  <!-- answer card -->
+  <div class="answer-card">
+    <div class="answer-tabs">
+      <button class="answer-tab active" id="tab-voice" onclick="switchTab('voice')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="5" y="1" width="4" height="7" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 7.5A4.5 4.5 0 0 0 11.5 7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M7 12v-1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Voice
+      </button>
+      <button class="answer-tab" id="tab-text" onclick="switchTab('text')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h10M2 7h7M2 11h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Text
+      </button>
+    </div>
+
+    <!-- voice tab -->
+    <div id="voice-panel">
+      <div class="voice-area">
+        <button class="record-btn idle" id="record-btn" onclick="toggleRecording()">
+          <svg id="rec-icon" width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="10" y="4" width="8" height="14" rx="4" stroke="#7c6ef5" stroke-width="1.8"/>
+            <path d="M5 14a9 9 0 0 0 18 0" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M14 23v-3" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="record-status" id="record-status">Click the microphone to start recording</div>
+        <div class="transcript-box" id="transcript-box">
+          <span class="transcript-placeholder" id="transcript-placeholder">Your spoken answer will appear here...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- text tab -->
+    <div id="text-panel" style="display:none">
+      <textarea class="text-area" id="text-answer" placeholder="Type your answer here... Try to write as you would speak naturally." maxlength="2000" oninput="updateCharCount()"></textarea>
+      <div class="char-count"><span id="char-count">0</span> / 2000 characters</div>
+    </div>
+
+    <div class="submit-row" style="margin-top:20px">
+      <div class="submit-row-left">
+        <button class="btn btn-primary" id="btn-submit" onclick="submitAnswer()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-6" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Get AI Feedback
+        </button>
+        <button class="btn btn-ghost" onclick="clearAnswer()">Clear</button>
+      </div>
+      <div style="font-size:12px;color:var(--text3)" id="answer-hint">Answer at least 2–3 sentences for best feedback</div>
+    </div>
+  </div>
+
+  <!-- feedback card -->
+  <div class="feedback-card" id="feedback-card">
+
+    <div class="overall-score">
+      <div class="overall-num" id="fb-overall" style="color:var(--violet)">—</div>
+      <div class="overall-info">
+        <div class="overall-band" id="fb-band">—</div>
+        <div class="overall-sub">Overall Band Score</div>
+      </div>
+    </div>
+
+    <div class="scores-grid">
+      <div class="score-item">
+        <div class="score-num" id="fb-fluency" style="color:var(--violet2)">—</div>
+        <div class="score-label">Fluency</div>
+      </div>
+      <div class="score-item">
+        <div class="score-num" id="fb-vocab" style="color:var(--green)">—</div>
+        <div class="score-label">Vocabulary</div>
+      </div>
+      <div class="score-item">
+        <div class="score-num" id="fb-grammar" style="color:var(--blue)">—</div>
+        <div class="score-label">Grammar</div>
+      </div>
+      <div class="score-item">
+        <div class="score-num" id="fb-pronunciation" style="color:var(--amber)">—</div>
+        <div class="score-label">Pronunciation</div>
+      </div>
+    </div>
+
+    <div class="feedback-section">
+      <div class="feedback-section-title">Assessment</div>
+      <div class="feedback-text" id="fb-text"></div>
+    </div>
+
+    <div class="feedback-section">
+      <div class="feedback-section-title">Strengths</div>
+      <div class="feedback-text green" id="fb-strengths"></div>
+    </div>
+
+    <div class="feedback-section">
+      <div class="feedback-section-title">Areas to Improve</div>
+      <div class="feedback-text amber" id="fb-improvements"></div>
+    </div>
+
+    <div class="feedback-section">
+      <div class="feedback-section-title">Band 8–9 Model Answer</div>
+      <div class="model-answer" id="fb-model"></div>
+    </div>
+
+  </div>
+
+  <!-- navigation buttons -->
+  <div class="nav-btns">
+    <button class="btn btn-ghost" id="btn-prev" onclick="prevQuestion()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Previous
+    </button>
+    <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">
+      Next Question
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<!-- loading overlay -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p>AI is analysing your answer...</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+const QUESTIONS = {{ questions_json|safe }};
+const PART = {{ part }};
+let currentIdx = 0;
+let sessionId = null;
+let answers = {};
+let mediaRecorder = null;
+let recognition = null;
+let isRecording = false;
+let transcript = '';
+
+// ─── init session ─────────────────────────────────────────────────────────────
+async function initSession() {
+  try {
+    const d = await api('POST', '/api/session/start/', {part: PART});
+    sessionId = d.session_id;
+  } catch(e) { console.error('session init failed', e); }
+}
+initSession();
+
+// ─── questions ────────────────────────────────────────────────────────────────
+const PART_TIPS = {
+  1: 'Give a natural, conversational answer. 2–3 sentences is ideal. Don\'t over-prepare.',
+  2: 'You have 1 minute to prepare. Speak for 1–2 minutes covering all bullet points.',
+  3: 'Give extended, analytical answers. Support your opinions with examples and reasoning.',
+};
+
+function loadQuestion(idx) {
+  if (idx < 0 || idx >= QUESTIONS.length) return;
+  const q = QUESTIONS[idx];
+  document.getElementById('q-num-label').textContent = `Question ${idx + 1}`;
+  document.getElementById('q-topic').textContent = q.topic;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('q-tip').textContent = PART_TIPS[PART] || '';
+  document.getElementById('q-current').textContent = idx + 1;
+
+  const pct = Math.round(((idx + 1) / QUESTIONS.length) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  document.getElementById('btn-prev').disabled = idx === 0;
+  const isLast = idx === QUESTIONS.length - 1;
+  document.getElementById('btn-next').textContent = isLast ? 'Finish Session' : 'Next Question';
+
+  clearAnswer();
+  document.getElementById('feedback-card').classList.remove('show');
+
+  if (answers[q.id]) {
+    showStoredFeedback(answers[q.id]);
+  }
+}
+
+function nextQuestion() {
+  if (currentIdx < QUESTIONS.length - 1) {
+    currentIdx++;
+    loadQuestion(currentIdx);
+  } else {
+    finishSession();
+  }
+}
+
+function prevQuestion() {
+  if (currentIdx > 0) {
+    currentIdx--;
+    loadQuestion(currentIdx);
+  }
+}
+
+async function finishSession() {
+  if (!sessionId) return;
+  try {
+    const d = await api('POST', `/api/session/${sessionId}/complete/`);
+    window.location.href = `/results/${sessionId}/`;
+  } catch(e) {
+    showToast('Could not complete session', 'error');
+  }
+}
+
+// ─── tabs ─────────────────────────────────────────────────────────────────────
+let activeTab = 'voice';
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-voice').className = 'answer-tab' + (tab === 'voice' ? ' active' : '');
+  document.getElementById('tab-text').className = 'answer-tab' + (tab === 'text' ? ' active' : '');
+  document.getElementById('voice-panel').style.display = tab === 'voice' ? '' : 'none';
+  document.getElementById('text-panel').style.display = tab === 'text' ? '' : 'none';
+}
+
+// ─── voice recording ──────────────────────────────────────────────────────────
+function toggleRecording() {
+  if (!isRecording) startRecording();
+  else stopRecording();
+}
+
+function startRecording() {
+  transcript = '';
+  document.getElementById('transcript-placeholder').style.display = 'none';
+  document.getElementById('transcript-box').innerHTML = '<span style="color:var(--text3);font-style:italic">Listening...</span>';
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Speech recognition not supported in this browser. Use Chrome.', 'error');
+    switchTab('text');
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    let final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t + ' ';
+      else interim += t;
+    }
+    transcript += final;
+    document.getElementById('transcript-box').textContent = transcript + interim;
+  };
+
+  recognition.onerror = (e) => {
+    showToast('Microphone error: ' + e.error, 'error');
+    stopRecording();
+  };
+
+  recognition.onend = () => { if (isRecording) recognition.start(); };
+
+  recognition.start();
+  isRecording = true;
+
+  const btn = document.getElementById('record-btn');
+  btn.className = 'record-btn recording';
+  btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5" y="5" width="12" height="12" rx="2" fill="#f87171"/></svg>`;
+  document.getElementById('record-status').textContent = 'Recording... Click to stop';
+}
+
+function stopRecording() {
+  if (recognition) { recognition.onend = null; recognition.stop(); recognition = null; }
+  isRecording = false;
+  const btn = document.getElementById('record-btn');
+  btn.className = 'record-btn idle';
+  btn.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="10" y="4" width="8" height="14" rx="4" stroke="#7c6ef5" stroke-width="1.8"/><path d="M5 14a9 9 0 0 0 18 0" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/><path d="M14 23v-3" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+  document.getElementById('record-status').textContent = transcript ? 'Recording complete. Click to record again.' : 'Click the microphone to start recording';
+  if (transcript) document.getElementById('transcript-box').textContent = transcript;
+}
+
+// ─── text helpers ─────────────────────────────────────────────────────────────
+function updateCharCount() {
+  const v = document.getElementById('text-answer').value;
+  document.getElementById('char-count').textContent = v.length;
+}
+
+function clearAnswer() {
+  transcript = '';
+  document.getElementById('transcript-box').innerHTML = '<span class="transcript-placeholder" id="transcript-placeholder">Your spoken answer will appear here...</span>';
+  document.getElementById('text-answer').value = '';
+  document.getElementById('char-count').textContent = '0';
+  document.getElementById('record-status').textContent = 'Click the microphone to start recording';
+  if (isRecording) stopRecording();
+}
+
+// ─── submit answer ────────────────────────────────────────────────────────────
+async function submitAnswer() {
+  const answerText = activeTab === 'voice'
+    ? transcript.trim()
+    : document.getElementById('text-answer').value.trim();
+
+  if (!answerText) {
+    showToast('Please record or type your answer first', 'error');
+    return;
+  }
+  if (answerText.length < 10) {
+    showToast('Answer is too short — please give a full response', 'error');
+    return;
+  }
+  if (!sessionId) {
+    showToast('Session not ready, please wait...', 'error');
+    return;
+  }
+
+  const q = QUESTIONS[currentIdx];
+  setLoading(true);
+
+  try {
+    const d = await api('POST', '/api/answer/submit/', {
+      session_id: sessionId,
+      question_id: q.id,
+      answer_text: answerText,
+    });
+    answers[q.id] = d.feedback;
+    showFeedback(d.feedback);
+    showToast('Feedback received!', 'success');
+  } catch(e) {
+    showToast(e.message || 'Failed to get feedback', 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function showFeedback(fb) {
+  document.getElementById('fb-overall').textContent = fb.overall;
+  document.getElementById('fb-overall').style.color = fb.band_color;
+  document.getElementById('fb-band').textContent = fb.band_label;
+  document.getElementById('fb-fluency').textContent = fb.fluency;
+  document.getElementById('fb-vocab').textContent = fb.vocabulary;
+  document.getElementById('fb-grammar').textContent = fb.grammar;
+  document.getElementById('fb-pronunciation').textContent = fb.pronunciation;
+  document.getElementById('fb-text').textContent = fb.feedback_text;
+  document.getElementById('fb-strengths').textContent = fb.strengths;
+  document.getElementById('fb-improvements').textContent = fb.improvements;
+  document.getElementById('fb-model').textContent = fb.model_answer;
+  const card = document.getElementById('feedback-card');
+  card.classList.add('show');
+  card.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function showStoredFeedback(fb) {
+  showFeedback(fb);
+}
+
+function setLoading(show) {
+  document.getElementById('loading-overlay').className = 'loading-overlay' + (show ? ' show' : '');
+  document.getElementById('btn-submit').disabled = show;
+}
+
+loadQuestion(0);
+</script>
+{% endblock %}

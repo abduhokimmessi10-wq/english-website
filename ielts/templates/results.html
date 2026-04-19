@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Session Results — SpeakAI{% endblock %}
+
+{% block extra_style %}
+.results-wrap{max-width:860px;margin:0 auto;padding:40px 24px 80px}
+.results-hero{text-align:center;padding:40px 0 48px}
+.results-score{font-size:88px;font-weight:200;font-family:'Inter',sans-serif;letter-spacing:-4px;line-height:1;color:var(--violet2);margin-bottom:8px}
+.results-band{font-size:22px;font-weight:600;color:var(--text1);margin-bottom:6px}
+.results-sub{font-size:14px;color:var(--text2)}
+.scores-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:480px;margin:28px auto 0}
+@media(min-width:480px){.scores-row{grid-template-columns:repeat(4,1fr)}}
+.sc-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;text-align:center}
+.sc-num{font-size:26px;font-weight:300;font-family:'Inter',sans-serif;letter-spacing:-1px;line-height:1;margin-bottom:4px}
+.sc-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+.answer-list{display:flex;flex-direction:column;gap:16px;margin-top:32px}
+.answer-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;position:relative;overflow:hidden}
+.answer-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--item-color,var(--violet))}
+.ai-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.ai-part{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.ai-score{font-size:22px;font-weight:500;font-family:'Inter',sans-serif;letter-spacing:-0.5px}
+.ai-q{font-size:15px;font-weight:500;color:var(--text1);margin-bottom:10px;line-height:1.5}
+.ai-answer{font-size:13px;color:var(--text2);line-height:1.7;background:var(--surface2);border-radius:var(--r2);padding:12px 14px;margin-bottom:14px}
+.ai-fb-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(min-width:560px){.ai-fb-row{grid-template-columns:repeat(4,1fr)}}
+.ai-fb-item{background:var(--surface2);border-radius:8px;padding:10px;text-align:center}
+.ai-fb-num{font-size:18px;font-weight:500;font-family:'Inter',sans-serif;margin-bottom:2px}
+.ai-fb-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px}
+.action-row{display:flex;gap:12px;justify-content:center;margin-top:40px;flex-wrap:wrap}
+{% endblock %}
+
+{% block content %}
+<div class="results-wrap">
+
+  <div class="results-hero">
+    <div class="results-score">{% if session.total_score %}{{ session.total_score }}{% else %}—{% endif %}</div>
+    <div class="results-band">
+      {% if session.total_score %}
+        {% if session.total_score >= 8.5 %}Expert User
+        {% elif session.total_score >= 7.5 %}Very Good User
+        {% elif session.total_score >= 6.5 %}Good User
+        {% elif session.total_score >= 5.5 %}Competent User
+        {% elif session.total_score >= 4.5 %}Modest User
+        {% else %}Limited User{% endif %}
+      {% else %}Session Complete{% endif %}
+    </div>
+    <div class="results-sub">Session completed · {{ answers|length }} question{{ answers|length|pluralize }} answered</div>
+
+    {% if answers %}
+    <div class="scores-row">
+      {% with fluency_avg=0 %}
+      <div class="sc-card"><div class="sc-num" style="color:var(--violet2)">
+        {% for a in answers %}{% if a.feedback_fluency %}{{ a.feedback_fluency|floatformat:1 }}{% endif %}{% endfor %}
+      </div><div class="sc-label">Fluency</div></div>
+      {% endwith %}
+      <div class="sc-card"><div class="sc-num" style="color:var(--green)">
+        {% for a in answers %}{% if a.feedback_vocabulary %}{{ a.feedback_vocabulary|floatformat:1 }}{% endif %}{% endfor %}
+      </div><div class="sc-label">Vocabulary</div></div>
+      <div class="sc-card"><div class="sc-num" style="color:var(--blue)">
+        {% for a in answers %}{% if a.feedback_grammar %}{{ a.feedback_grammar|floatformat:1 }}{% endif %}{% endfor %}
+      </div><div class="sc-label">Grammar</div></div>
+      <div class="sc-card"><div class="sc-num" style="color:var(--amber)">
+        {% for a in answers %}{% if a.feedback_pronunciation %}{{ a.feedback_pronunciation|floatformat:1 }}{% endif %}{% endfor %}
+      </div><div class="sc-label">Pronunciation</div></div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="answer-list">
+    {% for answer in answers %}
+    <div class="answer-item" style="--item-color:{% if answer.question.part == 1 %}#7c6ef5{% elif answer.question.part == 2 %}#34d399{% else %}#60a5fa{% endif %}">
+      <div class="ai-meta">
+        <span class="ai-part">Part {{ answer.question.part }} · Q{{ answer.question.order }} · {{ answer.question.topic }}</span>
+        {% if answer.feedback_overall %}
+        <span class="ai-score" style="color:{% if answer.feedback_overall >= 7.5 %}#34d399{% elif answer.feedback_overall >= 6.0 %}#60a5fa{% elif answer.feedback_overall >= 5.0 %}#fbbf24{% else %}#f87171{% endif %}">
+          Band {{ answer.feedback_overall }}
+        </span>
+        {% endif %}
+      </div>
+      <div class="ai-q">{{ answer.question.text }}</div>
+      <div class="ai-answer">{{ answer.answer_text }}</div>
+      {% if answer.feedback_overall %}
+      <div class="ai-fb-row">
+        <div class="ai-fb-item"><div class="ai-fb-num" style="color:var(--violet2)">{{ answer.feedback_fluency|floatformat:1 }}</div><div class="ai-fb-label">Fluency</div></div>
+        <div class="ai-fb-item"><div class="ai-fb-num" style="color:var(--green)">{{ answer.feedback_vocabulary|floatformat:1 }}</div><div class="ai-fb-label">Vocabulary</div></div>
+        <div class="ai-fb-item"><div class="ai-fb-num" style="color:var(--blue)">{{ answer.feedback_grammar|floatformat:1 }}</div><div class="ai-fb-label">Grammar</div></div>
+        <div class="ai-fb-item"><div class="ai-fb-num" style="color:var(--amber)">{{ answer.feedback_pronunciation|floatformat:1 }}</div><div class="ai-fb-label">Pronunciation</div></div>
+      </div>
+      {% if answer.feedback_text %}<div style="margin-top:12px;font-size:13px;color:var(--text2);line-height:1.6;border-left:2px solid var(--border2);padding-left:12px">{{ answer.feedback_text }}</div>{% endif %}
+      {% endif %}
+    </div>
+    {% empty %}
+    <div style="text-align:center;padding:40px;color:var(--text3)">No answers recorded in this session.</div>
+    {% endfor %}
+  </div>
+
+  <div class="action-row">
+    <a href="/practice/1/" class="btn btn-primary btn-lg">Practice Again</a>
+    <a href="/" class="btn btn-ghost btn-lg">Back to Home</a>
+  </div>
+
+</div>
+{% endblock %}
