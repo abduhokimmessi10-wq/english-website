@@ -1,8 +1,7 @@
-
+import os
 from pathlib import Path
 from dotenv import load_dotenv
-import dj_database_url
-import os
+
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -56,15 +55,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ielts.wsgi.application'
 
-
-
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ielts_db',         # PostgreSQL'da yaratgan baza nomi
+        'USER': 'postgres',         # Foydalanuvchi nomi
+        'PASSWORD': 'postgres', # PostgreSQL parolingiz
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
 }
-
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
     'DEFAULT_PARSER_CLASSES': [
