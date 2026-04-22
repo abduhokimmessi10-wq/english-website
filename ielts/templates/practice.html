@@ -333,7 +333,7 @@ function toggleRecording() {
 }
 
 function startRecording() {
-  transcript = ''; // Boshida tozalaymiz
+  transcript = '';
   document.getElementById('transcript-placeholder').style.display = 'none';
   document.getElementById('transcript-box').innerHTML = '<span style="color:var(--text3);font-style:italic">Listening...</span>';
 
@@ -345,8 +345,6 @@ function startRecording() {
   }
 
   recognition = new SpeechRecognition();
-  // continuous ni false qilamiz, shunda u bitta gapni tugatgach to'xtaydi yoki
-  // biz o'zimiz boshqaramiz. Takrorlanishni oldini olish uchun eng yaxshi yo'li shu.
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.lang = 'en-US';
@@ -354,40 +352,21 @@ function startRecording() {
   recognition.onresult = (e) => {
     let interim = '';
     let final = '';
-
-    // Eng muhim joyi: biz faqat e.results'ning eng oxirgi yakuniy qismini olamiz
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) {
-        final += t + ' ';
-      } else {
-        interim += t;
-      }
+      if (e.results[i].isFinal) final += t + ' ';
+      else interim += t;
     }
-
-    // GLOBAL transcript o'zgaruvchisiga faqat yangi chiqqan "final" qismini qo'shamiz
-    // Avvalgi kodingizda har safar hamma narsani qo'shib yuborayotgan edi
-    if (final) {
-        transcript += final;
-    }
-
+    transcript += final;
     document.getElementById('transcript-box').textContent = transcript + interim;
   };
 
   recognition.onerror = (e) => {
-    if (e.error !== 'no-speech') {
-        showToast('Microphone error: ' + e.error, 'error');
-        stopRecording();
-    }
+    showToast('Microphone error: ' + e.error, 'error');
+    stopRecording();
   };
 
-  // onend ichidagi start() ni olib tashladik, bu o'sha ruxsat so'rashni kamaytiradi
-  recognition.onend = () => {
-      if (isRecording) {
-          // Agar hali ham recording holatida bo'lsak, lekin nutq to'xtagan bo'lsa
-          // qayta start qilish mumkin, lekin onend ichida bu ehtiyotkorlikni talab qiladi
-      }
-  };
+  recognition.onend = () => { if (isRecording) recognition.start(); };
 
   recognition.start();
   isRecording = true;
@@ -399,18 +378,15 @@ function startRecording() {
 }
 
 function stopRecording() {
-  if (recognition) {
-      recognition.onend = null;
-      recognition.stop();
-      recognition = null;
-  }
+  if (recognition) { recognition.onend = null; recognition.stop(); recognition = null; }
   isRecording = false;
   const btn = document.getElementById('record-btn');
   btn.className = 'record-btn idle';
   btn.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="10" y="4" width="8" height="14" rx="4" stroke="#7c6ef5" stroke-width="1.8"/><path d="M5 14a9 9 0 0 0 18 0" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/><path d="M14 23v-3" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/></svg>`;
-  document.getElementById('record-status').textContent = transcript ? 'Recording complete.' : 'Click the microphone to start recording';
-  if (transcript) document.getElementById('transcript-box').textContent = transcript.trim();
+  document.getElementById('record-status').textContent = transcript ? 'Recording complete. Click to record again.' : 'Click the microphone to start recording';
+  if (transcript) document.getElementById('transcript-box').textContent = transcript;
 }
+
 // ─── text helpers ─────────────────────────────────────────────────────────────
 function updateCharCount() {
   const v = document.getElementById('text-answer').value;
