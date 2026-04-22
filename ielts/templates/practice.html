@@ -328,62 +328,70 @@ function switchTab(tab) {
 
 // ─── voice recording ──────────────────────────────────────────────────────────
 function startRecording() {
-  transcript = '';
+  transcript = ''; // Boshida hamma narsani tozalaymiz
   document.getElementById('transcript-placeholder').style.display = 'none';
   document.getElementById('transcript-box').innerHTML = '<span style="color:var(--text3);font-style:italic">Listening...</span>';
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    showToast('Speech recognition not supported in this browser. Use Chrome.', 'error');
-    switchTab('text');
+    showToast('Speech recognition not supported. Use Chrome.', 'error');
     return;
   }
 
   recognition = new SpeechRecognition();
   recognition.continuous = true;
-  recognition.interimResults = true; // Oraliq natijalarni ko'rib turish uchun kerak
+  recognition.interimResults = true;
   recognition.lang = 'en-US';
 
   recognition.onresult = (e) => {
-    let interimTranscript = '';
-    // MUHIM: Har safar finalTranscriptni noldan yig'amiz
-    let finalTranscript = '';
+    let interimText = '';
+    let finalForThisResult = '';
 
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const result = e.results[i];
-      const text = result[0].transcript;
-
       if (result.isFinal) {
-        // Faqat haqiqiy yakunlangan gapni transcriptga qo'shamiz
-        transcript += text + ' ';
+        // Faqat haqiqiy aytilgan gapni bitta qilib yozadi
+        finalForThisResult += result[0].transcript + ' ';
       } else {
-        // Hali tugallanmagan qismini alohida ushlaymiz
-        interimTranscript += text;
+        interimText += result[0].transcript;
       }
     }
 
-    // Ekranda ikkalasini qo'shib ko'rsatamiz, lekin transcript o'zgaruvchisiga
-    // interim qismini qo'shmaymiz!
-    document.getElementById('transcript-box').textContent = transcript + interimTranscript;
+    // Agar odam o'sha gapni qaytarsa, transcriptga qo'shiladi
+    // Lekin brauzer takroran yuborayotgan bo'lsa, bu filtrlaydi
+    if (finalForThisResult) {
+      transcript += finalForThisResult;
+    }
+
+    document.getElementById('transcript-box').textContent = transcript + interimText;
   };
 
   recognition.onerror = (e) => {
-    if (e.error !== 'no-speech') {
-        showToast('Microphone error: ' + e.error, 'error');
-        stopRecording();
-    }
+    console.error('Mic error:', e.error);
+    stopRecording();
   };
 
-  // onend ichidan start() ni olib tashlang! Bu 10 marta ruxsat so'rashni to'xtatadi.
-  recognition.onend = () => { isRecording = false; };
+  recognition.onend = () => {
+    // Agar recording hali ham true bo'lsa va u o'chib qolsa, qayta start qilamiz
+    if (isRecording) recognition.start();
+  };
 
   recognition.start();
   isRecording = true;
+  updateRecordUI(true);
+}
 
+// UI ni yangilash uchun alohida kichik funksiya
+function updateRecordUI(recording) {
   const btn = document.getElementById('record-btn');
-  btn.className = 'record-btn recording';
-  btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5" y="5" width="12" height="12" rx="2" fill="#f87171"/></svg>`;
-  document.getElementById('record-status').textContent = 'Recording... Click to stop';
+  if (recording) {
+    btn.className = 'record-btn recording';
+    btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5" y="5" width="12" height="12" rx="2" fill="#f87171"/></svg>`;
+    document.getElementById('record-status').textContent = 'Recording... Click to stop';
+  } else {
+    btn.className = 'record-btn idle';
+    btn.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="10" y="4" width="8" height="14" rx="4" stroke="#7c6ef5" stroke-width="1.8"/><path d="M5 14a9 9 0 0 0 18 0" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/><path d="M14 23v-3" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+  }
 }
 
 // ─── text helpers ─────────────────────────────────────────────────────────────
