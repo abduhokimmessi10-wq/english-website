@@ -327,14 +327,22 @@ function switchTab(tab) {
 }
 
 // ─── voice recording ──────────────────────────────────────────────────────────
+function toggleRecording() {
+  if (!isRecording) startRecording();
+  else stopRecording();
+}
+
 function startRecording() {
-  transcript = ''; // Boshida hamma narsani tozalaymiz
-  document.getElementById('transcript-placeholder').style.display = 'none';
-  document.getElementById('transcript-box').innerHTML = '<span style="color:var(--text3);font-style:italic">Listening...</span>';
+  transcript = ''; // Har safar yangidan boshlaymiz
+  const transcriptBox = document.getElementById('transcript-box');
+  const placeholder = document.getElementById('transcript-placeholder');
+
+  if (placeholder) placeholder.style.display = 'none';
+  transcriptBox.innerHTML = '<span style="color:var(--text3);font-style:italic">Listening...</span>';
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    showToast('Speech recognition not supported. Use Chrome.', 'error');
+    alert('Speech recognition not supported in this browser. Use Chrome.');
     return;
   }
 
@@ -350,50 +358,65 @@ function startRecording() {
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const result = e.results[i];
       if (result.isFinal) {
-        // Faqat haqiqiy aytilgan gapni bitta qilib yozadi
+        // Faqat haqiqiy tasdiqlangan gapni qo'shamiz (okay okay bo'lib ketmaydi)
         finalForThisResult += result[0].transcript + ' ';
       } else {
         interimText += result[0].transcript;
       }
     }
 
-    // Agar odam o'sha gapni qaytarsa, transcriptga qo'shiladi
-    // Lekin brauzer takroran yuborayotgan bo'lsa, bu filtrlaydi
     if (finalForThisResult) {
       transcript += finalForThisResult;
     }
 
-    document.getElementById('transcript-box').textContent = transcript + interimText;
+    // Ekranda ko'rsatish
+    transcriptBox.textContent = transcript + interimText;
   };
 
   recognition.onerror = (e) => {
-    console.error('Mic error:', e.error);
+    console.error('Mic Error:', e.error);
+    if (e.error === 'not-allowed') {
+        alert('Mikrofonga ruxsat berilmagan! Brauzer tepasidan "Allow" qiling.');
+    }
     stopRecording();
   };
 
   recognition.onend = () => {
-    // Agar recording hali ham true bo'lsa va u o'chib qolsa, qayta start qilamiz
-    if (isRecording) recognition.start();
+    // Agar o'zi o'chib qolsa va biz hali to'xtatmagan bo'lsak, qayta yoqamiz
+    if (isRecording && recognition) {
+        try { recognition.start(); } catch(err) { console.log(err); }
+    }
   };
 
   recognition.start();
   isRecording = true;
-  updateRecordUI(true);
-}
 
-// UI ni yangilash uchun alohida kichik funksiya
-function updateRecordUI(recording) {
+  // UI Yangilash (Tugma ko'rinishi)
   const btn = document.getElementById('record-btn');
-  if (recording) {
+  if (btn) {
     btn.className = 'record-btn recording';
     btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5" y="5" width="12" height="12" rx="2" fill="#f87171"/></svg>`;
-    document.getElementById('record-status').textContent = 'Recording... Click to stop';
-  } else {
+  }
+  const status = document.getElementById('record-status');
+  if (status) status.textContent = 'Recording... Click to stop';
+}
+
+function stopRecording() {
+  isRecording = false;
+  if (recognition) {
+    recognition.onend = null; // Qayta yoqilmasligi uchun
+    recognition.stop();
+    recognition = null;
+  }
+
+  const btn = document.getElementById('record-btn');
+  if (btn) {
     btn.className = 'record-btn idle';
     btn.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="10" y="4" width="8" height="14" rx="4" stroke="#7c6ef5" stroke-width="1.8"/><path d="M5 14a9 9 0 0 0 18 0" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/><path d="M14 23v-3" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/></svg>`;
   }
+  const status = document.getElementById('record-status');
+  if (status) status.textContent = transcript ? 'Recording complete.' : 'Click the microphone to start recording';
 }
-
 // ─── text helpers ─────────────────────────────────────────────────────────────
 function updateCharCount() {
   const v = document.getElementById('text-answer').value;
