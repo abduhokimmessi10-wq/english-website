@@ -327,64 +327,113 @@ function switchTab(tab) {
 }
 
 // ─── voice recording ──────────────────────────────────────────────────────────
-function toggleRecording() {
-  if (!isRecording) startRecording();
-  else stopRecording();
+ function toggleRecording() {
+
+if (!isRecording) startRecording();
+
+else stopRecording();
+
 }
+
 
 function startRecording() {
-  transcript = '';
-  document.getElementById('transcript-placeholder').style.display = 'none';
-  document.getElementById('transcript-box').innerHTML = '<span style="color:var(--text3);font-style:italic">Listening...</span>';
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    showToast('Speech recognition not supported in this browser. Use Chrome.', 'error');
-    switchTab('text');
-    return;
-  }
+transcript = '';
 
-  recognition = new SpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = 'en-US';
+document.getElementById('transcript-placeholder').style.display = 'none';
 
-  recognition.onresult = (e) => {
-    let interim = '';
-    let final = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) final += t + ' ';
-      else interim += t;
-    }
-    transcript += final;
-    document.getElementById('transcript-box').textContent = transcript + interim;
-  };
+document.getElementById('transcript-box').innerHTML = '<span style="color:var(--text3);font-style:italic">Listening...</span>';
 
-  recognition.onerror = (e) => {
-    showToast('Microphone error: ' + e.error, 'error');
-    stopRecording();
-  };
 
-  recognition.onend = () => { if (isRecording) recognition.start(); };
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  recognition.start();
-  isRecording = true;
+if (!SpeechRecognition) {
 
-  const btn = document.getElementById('record-btn');
-  btn.className = 'record-btn recording';
-  btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5" y="5" width="12" height="12" rx="2" fill="#f87171"/></svg>`;
-  document.getElementById('record-status').textContent = 'Recording... Click to stop';
+showToast('Speech recognition not supported in this browser. Use Chrome.', 'error');
+
+switchTab('text');
+
+return;
+
 }
 
+
+recognition = new SpeechRecognition();
+
+recognition.continuous = true;
+
+recognition.interimResults = true;
+
+recognition.lang = 'en-US';
+
+
+recognition.onresult = (e) => {
+
+let interim = '';
+
+let final = '';
+
+for (let i = e.resultIndex; i < e.results.length; i++) {
+
+const t = e.results[i][0].transcript;
+
+if (e.results[i].isFinal) final += t + ' ';
+
+else interim += t;
+
+}
+
+transcript += final;
+
+document.getElementById('transcript-box').textContent = transcript + interim;
+
+};
+
+
+recognition.onerror = (e) => {
+
+showToast('Microphone error: ' + e.error, 'error');
+
+stopRecording();
+
+};
+
+
+recognition.onend = () => { if (isRecording) recognition.start(); };
+
+
+recognition.start();
+
+isRecording = true;
+
+
+const btn = document.getElementById('record-btn');
+
+btn.className = 'record-btn recording';
+
+btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5" y="5" width="12" height="12" rx="2" fill="#f87171"/></svg>`;
+
+document.getElementById('record-status').textContent = 'Recording... Click to stop';
+
+}
+
+
 function stopRecording() {
-  if (recognition) { recognition.onend = null; recognition.stop(); recognition = null; }
-  isRecording = false;
-  const btn = document.getElementById('record-btn');
-  btn.className = 'record-btn idle';
-  btn.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="10" y="4" width="8" height="14" rx="4" stroke="#7c6ef5" stroke-width="1.8"/><path d="M5 14a9 9 0 0 0 18 0" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/><path d="M14 23v-3" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/></svg>`;
-  document.getElementById('record-status').textContent = transcript ? 'Recording complete. Click to record again.' : 'Click the microphone to start recording';
-  if (transcript) document.getElementById('transcript-box').textContent = transcript;
+
+if (recognition) { recognition.onend = null; recognition.stop(); recognition = null; }
+
+isRecording = false;
+
+const btn = document.getElementById('record-btn');
+
+btn.className = 'record-btn idle';
+
+btn.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="10" y="4" width="8" height="14" rx="4" stroke="#7c6ef5" stroke-width="1.8"/><path d="M5 14a9 9 0 0 0 18 0" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/><path d="M14 23v-3" stroke="#7c6ef5" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+
+document.getElementById('record-status').textContent = transcript ? 'Recording complete. Click to record again.' : 'Click the microphone to start recording';
+
+if (transcript) document.getElementById('transcript-box').textContent = transcript;
+
 }
 
 // ─── text helpers ─────────────────────────────────────────────────────────────
